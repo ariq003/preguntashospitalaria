@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Práctica Examen - Atención Psicológica</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .hero {
+            background: white;
+            border-radius: 20px;
+            padding: 48px;
+            margin-bottom: 32px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            text-align: center;
+        }
+        .hero h1 {
+            font-size: 42px;
+            color: #667eea;
+            margin-bottom: 16px;
+        }
+        .hero p {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 24px;
+        }
+        .emoji { font-size: 64px; margin-bottom: 24px; }
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        .module-card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .module-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 48px rgba(0,0,0,0.2);
+        }
+        .module-card.interciclo-1 { border-top: 4px solid #667eea; }
+        .module-card.interciclo-2 { border-top: 4px solid #f5576c; }
+        .module-card.duelo { border-top: 4px solid #48bb78; }
+        .module-card.tcc { border-top: 4px solid #f6ad55; }
+        .module-card.tip { border-top: 4px solid #4299e1; }
+        .module-card.sistemica { border-top: 4px solid #9f7aea; }
+        .module-card.esquizofrenia { border-top: 4px solid #ed8936; }
+        .module-card.tercera-gen { border-top: 4px solid #38b2ac; }
+        
+        .module-icon { font-size: 48px; margin-bottom: 16px; }
+        .module-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .module-subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 12px;
+        }
+        .module-count {
+            display: inline-block;
+            background: #f7fafc;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #667eea;
+        }
+        .info-box {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        .info-box h3 {
+            color: #667eea;
+            margin-bottom: 16px;
+        }
+        .info-box ul {
+            list-style: none;
+            padding: 0;
+        }
+        .info-box li {
+            padding: 8px 0;
+            padding-left: 24px;
+            position: relative;
+        }
+        .info-box li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #48bb78;
+            font-weight: bold;
+        }
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 32px; }
+            .hero p { font-size: 16px; }
+            .hero { padding: 32px 24px; }
+            .modules-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <div class="emoji">📚</div>
+            <h1>Examen de Atención Psicológica</h1>
+            <p>Sistema de práctica interactivo con 224 preguntas organizadas por módulos</p>
+            <p style="font-size: 14px; color: #999;">¡Mucha suerte en el exámen! 🍀</p>
+        </div>
+
+        <div class="modules-grid">
+            <a href="interciclo-1-practica.html" class="module-card interciclo-1">
+                <div class="module-icon">🏥</div>
+                <div class="module-title">INTERCICLO 1</div>
+                <div class="module-subtitle">Psicología de la Salud & Hospitalaria</div>
+                <span class="module-count">45 preguntas</span>
+            </a>
+
+            <a href="interciclo-2-practica.html" class="module-card interciclo-2">
+                <div class="module-icon">❤️</div>
+                <div class="module-title">INTERCICLO 2</div>
+                <div class="module-subtitle">Cardiovascular & Fase Final</div>
+                <span class="module-count">34 preguntas</span>
+            </a>
+
+            <a href="duelo-practica.html" class="module-card duelo">
+                <div class="module-icon">🕊️</div>
+                <div class="module-title">Duelo</div>
+                <div class="module-subtitle">Psicoterapia Integrativa-Relacional</div>
+                <span class="module-count">17 preguntas</span>
+            </a>
+
+            <a href="modulo-toc.html" class="module-card tcc">
+                <div class="module-icon">🧠</div>
+                <div class="module-title">TCC</div>
+                <div class="module-subtitle">Pánico, TOC, TAG, Depresión</div>
+                <span class="module-count">40 preguntas	</span>
+            </a>
+
+            <a href="tip-grupal.html" class="module-card tip">
+                <div class="module-icon">👥</div>
+                <div class="module-title">TIP Grupal</div>
+                <div class="module-subtitle">Terapia Interpersonal</div>
+                <span class="module-count">15 preguntas</span>
+            </a>
+
+            <a href="sistemica.html" class="module-card sistemica">
+                <div class="module-icon">💑</div>
+                <div class="module-title">Terapia Sistémica</div>
+                <div class="module-subtitle">Pareja y Depresión</div>
+                <span class="module-count">14 preguntas</span>
+            </a>
+
+            <a href="esquizofrenia.html" class="module-card esquizofrenia">
+                <div class="module-icon">🔬</div>
+                <div class="module-title">Esquizofrenia</div>
+                <div class="module-subtitle">Habilidades Sociales & TCC</div>
+                <span class="module-count">21 preguntas</span>
+            </a>
+
+            <a href="tercera-generacion.html" class="module-card tercera-gen">
+                <div class="module-icon">🌟</div>
+                <div class="module-title">3ª Generación</div>
+                <div class="module-subtitle">ACT, TDC & Técnicas</div>
+                <span class="module-count">29 preguntas</span>
+            </a>
+        </div>
+
+        <div class="info-box">
+            <h3>✨ Características de la aplicación:</h3>
+            <ul>
+                <li>Preguntas aleatorias que no se repiten hasta completar todas</li>
+                <li>Retroalimentación inmediata con la respuesta correcta</li>
+                <li>Estadísticas en tiempo real (correctas, incorrectas, precisión)</li>
+                <li>Barra de progreso visual</li>
+                <li>Diseño responsive para móvil y escritorio</li>
+                <li>Sin necesidad de conexión a internet después de cargar</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

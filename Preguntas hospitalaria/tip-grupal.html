@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TIP GRUPAL - Práctica Examen</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        .header { background: white; border-radius: 16px; padding: 24px; margin-bottom: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+        .header h1 { color: #48bb78; font-size: 28px; margin-bottom: 8px; }
+        .header p { color: #666; font-size: 14px; }
+        .stats { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+        .stat { background: #f0fff4; padding: 12px 16px; border-radius: 8px; font-size: 14px; flex: 1; min-width: 100px; text-align: center; }
+        .stat strong { color: #48bb78; font-size: 20px; display: block; }
+        .card { background: white; border-radius: 16px; padding: 32px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+        .question-number { color: #48bb78; font-weight: 600; font-size: 14px; margin-bottom: 16px; }
+        .question-text { font-size: 18px; line-height: 1.6; color: #2d3748; margin-bottom: 24px; font-weight: 500; }
+        .options { display: flex; flex-direction: column; gap: 12px; }
+        .option { padding: 16px; border: 2px solid #e2e8f0; border-radius: 12px; cursor: pointer; transition: all 0.2s; font-size: 16px; line-height: 1.5; }
+        .option:hover:not(.selected):not(.correct):not(.incorrect) { border-color: #48bb78; background: #f0fff4; transform: translateX(4px); }
+        .option.selected { border-color: #48bb78; background: #f0fff4; }
+        .option.correct { border-color: #48bb78; background: #f0fff4; }
+        .option.incorrect { border-color: #f56565; background: #fff5f5; }
+        .option-label { font-weight: 600; margin-right: 8px; color: #48bb78; }
+        .buttons { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+        button { padding: 14px 28px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; flex: 1; min-width: 150px; }
+        .btn-primary { background: #48bb78; color: white; }
+        .btn-primary:hover:not(:disabled) { background: #38a169; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4); }
+        .btn-primary:disabled { background: #cbd5e0; cursor: not-allowed; transform: none; }
+        .btn-secondary { background: #edf2f7; color: #2d3748; }
+        .btn-secondary:hover { background: #e2e8f0; }
+        .feedback { margin-top: 20px; padding: 16px; border-radius: 12px; font-size: 15px; line-height: 1.6; }
+        .feedback.correct { background: #f0fff4; border: 2px solid #48bb78; color: #22543d; }
+        .feedback.incorrect { background: #fff5f5; border: 2px solid #f56565; color: #742a2a; }
+        .progress-bar { height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin-top: 16px; }
+        .progress-fill { height: 100%; background: #48bb78; transition: width 0.3s ease; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState } = React;
+
+        const questions = [
+            {
+                question: "Para la primera sesión de Terapia Interpersonal Grupal para la depresión, no es necesario llevar:",
+                options: ["Test de evaluación para la depresión.", "Guía sobre las notas semanales del facilitador.", "Agenda con el cronograma de las sesiones.", "Lista de verificación de tareas para facilitadores y supervisores."],
+                correct: 0
+            },
+            {
+                question: "¿Cuál es el primer paso de la Tarea 1 de la fase inicial: Presente a los miembros del grupo y hable de depresión, en la Terapia Interpersonal Grupal?",
+                options: ["Recuerde al grupo las normas de confidencialidad.", "Usted y los miembros del grupo se presentan.", "Suscitar esperanza.", "Hable de la depresión en general."],
+                correct: 1
+            },
+            {
+                question: "¿Cuál es el objetivo de presentar a los miembros del grupo y hablar de depresión en la Terapia Interpersonal Grupal?",
+                options: ["El objetivo es que los miembros del grupo se conozcan.", "Para lograr un mayor entendimiento sobre la depresión.", "Reconocer que hay más personas que están pasando por lo mismo.", "Permite conocer la cultura de la comunidad, el entorno y las reglas."],
+                correct: 2
+            },
+            {
+                question: "En la Terapia Interpersonal Grupal, para invitar a los participantes a hablar sobre su vida se debe:",
+                options: ["Mostrar cercanía recurriendo sólo al lenguaje verbal.", "Establecer un sentimiento de cercanía entre los miembros del grupo.", "Tener presente que todos tienen dificultades para hablar de sucesos personales.", "Recurrir a asentir con la cabeza para conseguir que una persona hable."],
+                correct: 1
+            },
+            {
+                question: "Para terminar con la primera sesión de la Terapia Interpersonal Grupal, se debe:",
+                options: ["Explicar cómo trabajará el grupo.", "No es necesario que todos hayan participado directamente.", "Describir cómo funcionará la Terapia Interpersonal de forma individual.", "Brindar un cierre profundo que permita la reflexión de todos los participantes ante el cambio."],
+                correct: 0
+            },
+            {
+                question: "En la primera sesión de Terapia Interpersonal Grupal, es necesario explicar las reglas del grupo, las cuales hacen referencia a:",
+                options: [
+                    "Mencionar que la participación será voluntaria y que los integrantes pueden optar por no compartir experiencias personales.",
+                    "Señalar que el grupo tiene como finalidad principal entregar orientaciones prácticas para resolver problemas cotidianos.",
+                    "Advertir que no se distribuirán bienes materiales, se hablará sobre la importancia de asistir y sobre el abandono del mismo.",
+                    "Comunicar que las sesiones estarán estructuradas en torno a temas previamente definidos."
+                ],
+                correct: 2
+            },
+            {
+                question: "En la primera sesión de TIP Grupal, si no se aprecia un nivel óptimo de participación al invitar a describir problemas actuales, es importante identificar lo que NO sería adecuado decir:",
+                options: [
+                    "Generalmente es difícil empezar a hablar en un grupo, pero con el tiempo resulta más fácil.",
+                    "Lo que nos ha dicho Jazmín me recuerda las dificultades que tienen muchas personas. Bárbara, ¿qué piensa usted?",
+                    "Después de haber escuchado a Jazmín, ¿alguien más se ha sentido de la misma manera?",
+                    "Es probable que algunos aún no tengan claridad sobre las razones de su depresión, así que no es necesario profundizar por ahora."
+                ],
+                correct: 3
+            },
+            {
+                question: "¿Cuál es el objetivo de la fase intermedia de la Terapia Interpersonal Grupal?",
+                options: ["Abordar las áreas de problemas interpersonales relacionadas con la depresión actual.", "Controlar exclusivamente los síntomas físicos.", "Cancelar la participación grupal.", "Reemplazar el tratamiento farmacológico."],
+                correct: 0
+            },
+            {
+                question: "¿Qué técnica busca mostrar que el estado de ánimo está relacionado con las situaciones de la vida cotidiana?",
+                options: ["Controlar las conductas evitativas.", "Cuestionar las creencias irracionales.", "Asociar estados de ánimo con eventos vitales.", "Corregir pensamientos automáticos."],
+                correct: 2
+            },
+            {
+                question: "¿Cuál es una función central del análisis de la comunicación en la Terapia Interpersonal Grupal?",
+                options: ["Bloquear emociones intensas.", "Corregir errores cognitivos.", "Castigar conductas desadaptativas.", "Examinar mensajes verbales y no verbales en interacciones recientes."],
+                correct: 3
+            },
+            {
+                question: "Para cambios vitales como VIH (pérdida de rol laboral), ¿cuál es el enfoque estructurado de TIP para roles nuevos?",
+                options: [
+                    "Ayudar a describir el antes, durante y después del cambio, duelo del antiguo rol y oportunidades positivas.",
+                    "Negar desesperanza como síntoma depresivo.",
+                    "Culpar solo al entorno social.",
+                    "Limitar la interacción grupal."
+                ],
+                correct: 0
+            },
+            {
+                question: "En aislamiento social prolongado, ¿qué estrategia avanzada usa TIP más allá de salir?",
+                options: [
+                    "El desarrollar habilidades interpersonales con juegos de roles, retroalimentación y vínculos comunitarios.",
+                    "Reservar tiempo diario solo para rumiar.",
+                    "Esperar remisión espontánea de depresión.",
+                    "Restringir apoyo de otros miembros."
+                ],
+                correct: 0
+            },
+            {
+                question: "¿Por qué la depresión suele empeorar el aislamiento social según la TIP?",
+                options: [
+                    "Afecta la motivación y reduce la iniciativa para relacionarse.",
+                    "Cambia la personalidad de forma permanente.",
+                    "Porque elimina el deseo de pertenencia.",
+                    "Provoca pérdida total de habilidades sociales."
+                ],
+                correct: 0
+            },
+            {
+                question: "Cuando una persona se siente atrapada y cree que el conflicto no tiene solución, se encuentra en la fase de:",
+                options: ["Estancamiento", "Confrontación directa", "Negación del problema", "Desvinculación afectiva"],
+                correct: 0
+            },
+            {
+                question: "María (42 años) tiene síntomas depresivos tras perder su empleo y rol de sostén económico. Según la TIP, ¿cuál es el foco principal?",
+                options: [
+                    "Elaboración del cambio de rol y desarrollo de nuevas funciones significativas.",
+                    "Corrección de pensamientos automáticos negativos.",
+                    "Supresión emocional del malestar.",
+                    "Entrenamiento conductual intensivo."
+                ],
+                correct: 0
+            }
+        ];
+
+        function StudyApp() {
+            const [currentIdx, setCurrentIdx] = useState(0);
+            const [selectedAnswer, setSelectedAnswer] = useState(null);
+            const [showResult, setShowResult] = useState(false);
+            const [score, setScore] = useState(0);
+            const [answeredCount, setAnsweredCount] = useState(0);
+
+            const currentQuestion = questions[currentIdx];
+            const progress = ((currentIdx + 1) / questions.length) * 100;
+            const labels = ['a', 'b', 'c', 'd'];
+
+            const handleSelectOption = (index) => {
+                if (showResult) return;
+                setSelectedAnswer(index);
+            };
+
+            const handleCheckAnswer = () => {
+                if (selectedAnswer === currentQuestion.correct) {
+                    setScore(score + 1);
+                }
+                setShowResult(true);
+                setAnsweredCount(answeredCount + 1);
+            };
+
+            const handleNextQuestion = () => {
+                if (currentIdx < questions.length - 1) {
+                    setCurrentIdx(currentIdx + 1);
+                    setSelectedAnswer(null);
+                    setShowResult(false);
+                }
+            }
+
+            const handleReset = () => {
+                setCurrentIdx(0);
+                setSelectedAnswer(null);
+                setShowResult(false);
+                setScore(0);
+                setAnsweredCount(0);
+            };
+
+            return (
+                <div className="container">
+                    <div className="header">
+                        <h1>TIP GRUPAL - Práctica Examen</h1>
+                        <p>Terapia Interpersonal Grupal para la Depresión</p>
+                        <div className="stats">
+                            <div className="stat"><strong>{score}</strong>Aciertos</div>
+                            <div className="stat"><strong>{questions.length}</strong>Total</div>
+                            <div className="stat"><strong>{Math.round((score/answeredCount || 0) * 100)}%</strong>Eficiencia</div>
+                        </div>
+                        <div className="progress-bar">
+                            <div className="progress-fill" style={{ width: `${progress}%` }}></div>
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <div className="question-number">Pregunta {currentIdx + 1} de {questions.length}</div>
+                        <div className="question-text">{currentQuestion.question}</div>
+                        <div className="options">
+                            {currentQuestion.options.map((option, index) => {
+                                let className = 'option';
+                                if (showResult) {
+                                    if (index === currentQuestion.correct) className += ' correct';
+                                    else if (index === selectedAnswer) className += ' incorrect';
+                                } else if (index === selectedAnswer) {
+                                    className += ' selected';
+                                }
+                                return (
+                                    <div key={index} className={className} onClick={() => handleSelectOption(index)}>
+                                        <span className="option-label">{labels[index]})</span>{option}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        {showResult && (
+                            <div className={`feedback ${selectedAnswer === currentQuestion.correct ? 'correct' : 'incorrect'}`}>
+                                {selectedAnswer === currentQuestion.correct ? (
+                                    <><strong>✅ ¡Correcto!</strong><p>Buen análisis de la técnica TIP.</p></>
+                                ) : (
+                                    <><strong>❌ Incorrecto</strong><p>La respuesta correcta era: <strong>{labels[currentQuestion.correct]}) {currentQuestion.options[currentQuestion.correct]}</strong></p></>
+                                )}
+                            </div>
+                        )}
+                        <div className="buttons">
+                            {!showResult ? (
+                                <button className="btn-primary" onClick={handleCheckAnswer} disabled={selectedAnswer === null}>Verificar Respuesta</button>
+                            ) : (
+                                <button className="btn-primary" onClick={handleNextQuestion} disabled={currentIdx === questions.length - 1}>
+                                    {currentIdx === questions.length - 1 ? 'Práctica Finalizada' : 'Siguiente Pregunta →'}
+                                </button>
+                            )}
+                            <button className="btn-secondary" onClick={handleReset}>Reiniciar</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<StudyApp />, document.getElementById('root'));
+    </script>
+</body>
+</html>
