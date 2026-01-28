@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESQUIZOFRENIA - Práctica Completa</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        .header { background: white; border-radius: 16px; padding: 24px; margin-bottom: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+        .header h1 { color: #5a67d8; font-size: 28px; margin-bottom: 8px; }
+        .stats { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+        .stat { background: #ebf4ff; padding: 12px 16px; border-radius: 8px; font-size: 14px; flex: 1; text-align: center; }
+        .stat strong { color: #5a67d8; font-size: 20px; display: block; }
+        .card { background: white; border-radius: 16px; padding: 32px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+        .question-number { color: #5a67d8; font-weight: 600; font-size: 14px; margin-bottom: 16px; }
+        .question-text { font-size: 18px; line-height: 1.6; color: #2d3748; margin-bottom: 24px; font-weight: 500; }
+        .options { display: flex; flex-direction: column; gap: 12px; }
+        .option { padding: 16px; border: 2px solid #e2e8f0; border-radius: 12px; cursor: pointer; transition: all 0.2s; font-size: 16px; }
+        .option:hover:not(.selected):not(.correct):not(.incorrect) { border-color: #5a67d8; background: #ebf4ff; transform: translateX(4px); }
+        .option.selected { border-color: #5a67d8; background: #ebf4ff; }
+        .option.correct { border-color: #48bb78; background: #f0fff4; font-weight: bold; }
+        .option.incorrect { border-color: #f56565; background: #fff5f5; }
+        .option-label { font-weight: 600; margin-right: 8px; color: #5a67d8; }
+        .buttons { display: flex; gap: 12px; margin-top: 24px; }
+        button { padding: 14px 28px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; flex: 1; }
+        .btn-primary { background: #5a67d8; color: white; }
+        .btn-secondary { background: #edf2f7; color: #2d3748; }
+        .feedback { margin-top: 20px; padding: 16px; border-radius: 12px; font-size: 15px; }
+        .feedback.correct { background: #f0fff4; border: 2px solid #48bb78; color: #22543d; }
+        .feedback.incorrect { background: #fff5f5; border: 2px solid #f56565; color: #742a2a; }
+        .progress-bar { height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin-top: 16px; }
+        .progress-fill { height: 100%; background: #5a67d8; transition: width 0.3s ease; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState } = React;
+
+        const questions = [
+            { question: "1. El déficit en funcionamiento social en la esquizofrenia, según Heinssen, Liberman y Kopelowicz (2000):", options: ["Altamente correlaciona con el síndrome negativo, y levemente con síntomas positivos.", "Muestra asociación exclusiva con la gravedad de los síntomas positivos en fase aguda.", "Permanece independiente de la sintomatología, como un rasgo premórbido estable.", "Se correlaciona inversamente con la desorganización cognitiva."], correct: 0 },
+            { question: "2. El modelo de vulnerabilidad-estrés es el marco teórico principal que explica la interacción entre estresores ambientales y vulnerabilidad biológica:", options: ["VERDADERO", "FALSO"], correct: 0 },
+            { question: "3. El modelo de intervención familiar de Falloon se caracteriza principalmente por:", options: ["Basado en reducción de emoción expresada a través de grupos multifamiliares.", "El uso de técnicas altamente estructuradas de entrenamiento en comunicación y solución de problemas.", "La aplicación exclusiva de psicoeducación sin componentes conductuales.", "La exploración de conflictos intergeneracionales."], correct: 1 },
+            { question: "4. El 'modelo orientado a la atención' dentro del entrenamiento en habilidades sociales propone que:", options: ["Los pacientes deben ignorar las señales sociales irrelevantes.", "El entrenamiento debe centrarse en mejorar la percepción y procesamiento de señales sociales.", "La atención es un proceso que no influye en la competencia social.", "Los déficits atencionales se resuelven solo con medicación."], correct: 1 },
+            { question: "5. ¿Cuál de las siguientes es una técnica fundamental en el entrenamiento en habilidades sociales?", options: ["Asociación libre.", "Ensayo de conducta (Role-playing).", "Interpretación de los sueños.", "Hipnosis clínica."], correct: 1 },
+            { question: "6. El objetivo principal de los programas de 'Módulos de Entrenamiento en Habilidades para la Vida de Liberman' es:", options: ["Fomentar la introspección profunda.", "Enseñar habilidades específicas (manejo de medicación, ocio, etc.) mediante pasos estructurados.", "Sustituir el tratamiento farmacológico.", "Evaluar el CI del paciente."], correct: 1 },
+            { question: "7. La Terapia Psicológica Integrada (IPT) de Brenner se dirige a:", options: ["Únicamente los síntomas positivos.", "Déficits cognitivos y sociales de forma jerárquica.", "La familia del paciente exclusivamente.", "El análisis de traumas infantiles."], correct: 1 },
+            { question: "8. En el entrenamiento en habilidades sociales, el 'reforzamiento social' se utiliza para:", options: ["Castigar conductas inadecuadas.", "Incrementar la frecuencia de conductas sociales deseables.", "Ignorar al paciente.", "Evaluar la memoria."], correct: 1 },
+            { question: "9. La 'generalización' en el entrenamiento de habilidades sociales se refiere a:", options: ["Que el paciente aprenda una sola respuesta para todo.", "La capacidad de aplicar las habilidades aprendidas en situaciones de la vida real.", "Olvidar lo aprendido después de la sesión.", "Centrarse solo en el entorno hospitalario."], correct: 1 },
+            { question: "10. ¿Cuál es un componente clave de la Terapia Cognitivo-Conductual para las alucinaciones auditivas?", options: ["Convencer al paciente de que las voces no existen.", "Reducir el malestar mediante el análisis de las creencias sobre las voces.", "Incrementar la dosis de antipsicóticos.", "Ignorar el contenido de las voces."], correct: 1 },
+            { question: "11. El concepto de 'Emoción Expresada' (EE) en las familias se asocia con:", options: ["La inteligencia de los padres.", "Un factor de riesgo de recaída en la esquizofrenia.", "El éxito académico del paciente.", "La ausencia de síntomas."], correct: 1 },
+            { question: "12. Las intervenciones familiares psicoeducativas buscan principalmente:", options: ["Culpar a los padres por el trastorno.", "Reducir el estrés familiar y mejorar la colaboración en el tratamiento.", "Aislar al paciente de su familia.", "Eliminar la necesidad de psicólogos."], correct: 1 },
+            { question: "13. El entrenamiento en 'Solución de Problemas' en la esquizofrenia implica:", options: ["Evitar los problemas cotidianos.", "Seguir pasos lógicos para identificar y resolver dificultades sociales o personales.", "Que el terapeuta tome todas las decisiones.", "No considerar las consecuencias de las acciones."], correct: 1 },
+            { question: "14. La 'normalización' en la TCC para la psicosis consiste en:", options: ["Decir que el paciente es 'raro'.", "Enmarcar las experiencias psicóticas como una respuesta comprensible al estrés.", "Hospitalizar al paciente de por vida.", "Sugerir que los síntomas son inventados."], correct: 1 },
+            { question: "15. Un síntoma negativo de la esquizofrenia que afecta la competencia social es:", options: ["Alucinaciones visuales.", "Alogia o pobreza del lenguaje.", "Delirios de grandeza.", "Agitación psicomotriz."], correct: 1 },
+            { question: "16. El uso de 'vídeo-feedback' en el entrenamiento de habilidades sociales sirve para:", options: ["Entretener al paciente.", "Que el paciente observe su propio desempeño y corrija errores.", "Grabar sesiones para la policía.", "Aumentar la ansiedad."], correct: 1 },
+            { question: "17. La técnica de 'modelado' consiste en:", options: ["Hacer figuras de arcilla.", "Que el paciente observe a otra persona realizar la conducta deseada.", "Castigar al paciente por no saber actuar.", "Hablar solo de teorías."], correct: 1 },
+            { question: "18. Las intervenciones de 'Rehabilitación Cognitiva' se enfocan en:", options: ["Mejorar funciones como atención, memoria y funciones ejecutivas.", "Eliminar delirios mediante lógica pura.", "Solo en el bienestar emocional.", "La necesidad de tratamiento farmacológico."], correct: 0 },
+            { question: "19. El modelo de Terapia Psicológica Integrada (IPT) se basa en la premisa de que:", options: ["Cada nivel funcional opera de forma independiente.", "Existen niveles funcionales jerárquicamente relacionados.", "La rehabilitación social debe iniciarse sólo tras la normalización cognitiva.", "Los déficits conductuales no afectan a los procesos cognitivos."], correct: 1 },
+            { question: "20. La eficacia de la IPT frente al entrenamiento exclusivo en habilidades sociales indica que:", options: ["Carece de ventajas.", "Presenta resultados equivalentes a la socioterapia.", "Demuestra eficacia únicamente en síntomas leves.", "Ofrece mayor eficacia en la reducción de desorganización psicótica y mejora del procesamiento cognitivo-social."], correct: 3 },
+            { question: "21. Según las conclusiones generales, una intervención eficaz en esquizofrenia debe ser:", options: ["Breve, estandarizada y centrada solo en síntomas positivos.", "Dependiente exclusivamente de la intervención familiar.", "Orientada al paciente, multimodal, flexible y ajustada a las fases del trastorno.", "Rígida y uniforme para todos."], correct: 2 }
+        ];
+
+        function App() {
+            const [cur, setCur] = useState(0);
+            const [sel, setSel] = useState(null);
+            const [res, setRes] = useState(false);
+            const [pts, setPts] = useState(0);
+
+            const q = questions[cur];
+            const prog = ((cur + 1) / questions.length) * 100;
+
+            const onCheck = () => {
+                if (sel === q.correct) setPts(pts + 1);
+                setRes(true);
+            };
+
+            const onNext = () => { setCur(cur + 1); setSel(null); setRes(false); };
+            const reset = () => { setCur(0); setSel(null); setRes(false); setPts(0); };
+
+            if (cur >= questions.length) {
+                return (
+                    <div className="container">
+                        <div className="card" style={{textAlign:'center'}}>
+                            <h1>¡Módulo Finalizado!</h1>
+                            <p style={{fontSize:'24px', margin:'20px 0'}}>Puntaje: {pts} / {questions.length}</p>
+                            <button className="btn-primary" onClick={reset}>Volver a Intentar</button>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="container">
+                    <div className="header">
+                        <h1>Esquizofrenia: Habilidades Sociales & TCC</h1>
+                        <div className="stats">
+                            <div className="stat"><strong>{pts}</strong>Aciertos</div>
+                            <div className="stat"><strong>{questions.length}</strong>Total</div>
+                            <div className="stat"><strong>{Math.round((pts/(cur||1))*100)}%</strong>Eficiencia</div>
+                        </div>
+                        <div className="progress-bar"><div className="progress-fill" style={{width:`${prog}%`}}></div></div>
+                    </div>
+                    <div className="card">
+                        <div className="question-number">Pregunta {cur + 1} de {questions.length}</div>
+                        <p className="question-text">{q.question}</p>
+                        <div className="options">
+                            {q.options.map((o, i) => (
+                                <div key={i} className={`option ${sel===i?'selected':''} ${res&&i===q.correct?'correct':''} ${res&&sel===i&&i!==q.correct?'incorrect':''}`} onClick={()=>!res&&setSel(i)}>
+                                    <span className="option-label">{String.fromCharCode(97+i)})</span>{o}
+                                </div>
+                            ))}
+                        </div>
+                        {res && (
+                            <div className={`feedback ${sel===q.correct?'correct':'incorrect'}`}>
+                                {sel===q.correct ? "✅ ¡Correcto!" : `❌ Incorrecto. Respuesta: ${String.fromCharCode(97+q.correct)}`}
+                            </div>
+                        )}
+                        <div className="buttons">
+                            {!res ? <button className="btn-primary" onClick={onCheck} disabled={sel===null}>Verificar</button> : <button className="btn-primary" onClick={onNext}>Siguiente</button>}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>

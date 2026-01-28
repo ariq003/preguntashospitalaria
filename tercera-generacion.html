@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TCC Y 3ª GENERACIÓN - Práctica Completa</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        .header { background: white; border-radius: 16px; padding: 24px; margin-bottom: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+        .header h1 { color: #48bb78; font-size: 28px; margin-bottom: 8px; }
+        .stats { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+        .stat { background: #f0fff4; padding: 12px 16px; border-radius: 8px; font-size: 14px; flex: 1; min-width: 100px; text-align: center; }
+        .stat strong { color: #48bb78; font-size: 20px; display: block; }
+        .card { background: white; border-radius: 16px; padding: 32px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+        .question-number { color: #48bb78; font-weight: 600; font-size: 14px; margin-bottom: 16px; }
+        .question-text { font-size: 18px; line-height: 1.6; color: #2d3748; margin-bottom: 24px; font-weight: 500; }
+        .options { display: flex; flex-direction: column; gap: 12px; }
+        .option { padding: 16px; border: 2px solid #e2e8f0; border-radius: 12px; cursor: pointer; transition: all 0.2s; font-size: 16px; }
+        .option:hover:not(.selected):not(.correct):not(.incorrect) { border-color: #48bb78; background: #f0fff4; transform: translateX(4px); }
+        .option.selected { border-color: #48bb78; background: #f0fff4; }
+        .option.correct { border-color: #48bb78; background: #f0fff4; font-weight: bold; }
+        .option.incorrect { border-color: #f56565; background: #fff5f5; }
+        .option-label { font-weight: 600; margin-right: 8px; color: #48bb78; }
+        .buttons { display: flex; gap: 12px; margin-top: 24px; }
+        button { padding: 14px 28px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; flex: 1; }
+        .btn-primary { background: #48bb78; color: white; }
+        .btn-secondary { background: #edf2f7; color: #2d3748; }
+        .feedback { margin-top: 20px; padding: 16px; border-radius: 12px; font-size: 15px; }
+        .feedback.correct { background: #f0fff4; border: 2px solid #48bb78; color: #22543d; }
+        .feedback.incorrect { background: #fff5f5; border: 2px solid #f56565; color: #742a2a; }
+        .progress-bar { height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin-top: 16px; }
+        .progress-fill { height: 100%; background: #48bb78; transition: width 0.3s ease; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState } = React;
+
+        const questions = [
+            { question: "1. La planificación de comidas en TCC tiene como objetivo principal:", options: ["Castigar la ingesta excesiva", "Eliminar alimentos prohibidos", "Establecer patrones alimentarios regulares y flexibles", "Controlar estrictamente el peso"], correct: 2 },
+            { question: "2. La exposición con prevención de la respuesta se utiliza principalmente para:", options: ["Reducir el hambre fisiológica", "Afrontar alimentos temidos y prevenir purgas", "Disminuir la ansiedad general", "Bloquear pensamientos automáticos"], correct: 1 },
+            { question: "3. La exposición a la tentación con prevención de la respuesta se dirige específicamente a:", options: ["Control metabólico", "Déficit nutricional", "Atracones alimentarios", "Conductas depresivas"], correct: 2 },
+            { question: "4. La reestructuración cognitiva busca:", options: ["Reforzar creencias rígidas", "Analizar y sustituir pensamientos distorsionados por cogniciones racionales", "Desviar la atención del problema", "Bloquear emociones negativas"], correct: 1 },
+            { question: "5. Mujer de 22 años, atracones seguidos de vómitos ≥3 veces/semana durante 4 meses, peso normal. Diagnóstico más probable:", options: ["Compulsión alimentaria simple", "Bulimia nerviosa tipo purgante", "Trastorno alimentario no especificado", "Anorexia nerviosa purgativa"], correct: 1 },
+            { question: "6. Paciente con anorexia internado no alcanza objetivos de peso. Intervención TCC hospitalaria adecuada:", options: ["Alta terapéutica temprana", "Aplicación de contingencias conductuales y refuerzo operante", "Derivación inmediata ambulatoria", "Abordaje exclusivamente cognitivo"], correct: 1 },
+            { question: "7. El paso de hospitalización completa a parcial permite principalmente:", options: ["Reducción de la supervisión clínica", "Autogestión total inmediata", "Adaptación gradual al entorno no estructurado", "Abandono del tratamiento"], correct: 2 },
+            { question: "8. La evidencia científica indica que la TCC en bulimia nerviosa es:", options: ["Inferior a la medicación", "Altamente eficaz frente a no tratamiento y farmacoterapia sola", "Dependiente solo del formato grupal", "Comparable a placebo"], correct: 1 },
+            { question: "9. Un paciente evita discutir con su pareja para 'no empeorar las cosas'. Desde una lectura contextual, el problema central es que:", options: ["Limita la expresión emocional", "Reduce la intimidad afectiva", "Organiza la conducta en una dirección incongruente con lo que valora", "Incrementa el malestar subjetivo"], correct: 2 },
+            { question: "10. Desde ACT, una persona con ansiedad social que abandona estudios y amistades para estar 'tranquila' presenta un patrón problemático porque:", options: ["El alivio inmediato está funcionando como criterio principal para decidir", "Falta de motivación académica", "La ansiedad no ha sido extinguida", "Se ha reforzado el aislamiento"], correct: 0 },
+            { question: "11. (Repetida) Desde ACT, el patrón de evitar exposiciones para sentir alivio inmediato es problemático porque:", options: ["El alivio inmediato funciona como criterio principal para decidir", "Falta de motivación académica", "La ansiedad no ha sido extinguida", "Se ha reforzado el aislamiento"], correct: 0 },
+            { question: "12. Desde el contextualismo funcional, afirmar que una cognición es 'disfuncional' carece de sentido si no se considera:", options: ["Su contenido específico", "Su origen temprano", "Su intensidad emocional", "El efecto que produce sobre la acción en un contexto determinado"], correct: 3 },
+            { question: "13. Desde ACT, si dos pacientes dicen 'no soy suficiente' pero actúan distinto, la diferencia relevante está en:", options: ["Cómo ese pensamiento regula o no la conducta", "La veracidad percibida del pensamiento", "El nivel de autoestima", "La frecuencia del pensamiento"], correct: 0 },
+            { question: "14. Desde la TMR, un paciente que evita ejercicio 'por prevención' pese a indicación médica se explica mejor porque:", options: ["El dolor actúa como estímulo aversivo", "Existe miedo condicionado", "Una regla verbal está transformando la función del dolor", "Falta experiencia correctiva"], correct: 2 },
+            { question: "15. En ACT, cuando se dice que 'el control es el problema', se refiere a que:", options: ["Genera frustración constante", "Refuerza pensamientos negativos", "Reduce la tolerancia emocional", "Se vuelve problemático cuando gobierna la conducta a costa de valores"], correct: 3 },
+            { question: "16. 'Entiendo que es solo un pensamiento, pero igual no puedo actuar distinto'. Desde ACT, esto indica que:", options: ["No existe comprensión cognitiva suficiente", "El pensamiento es demasiado intenso", "La relación funcional con el pensamiento no ha cambiado", "Falta motivación al cambio"], correct: 2 },
+            { question: "17. Desde ACT, la evitación experiencial suele mantenerse incluso cuando empeora la vida porque:", options: ["El malestar es demasiado intenso", "La persona no anticipa consecuencias", "Falta apoyo social", "El alivio inmediato funciona como reforzador potente"], correct: 3 },
+            { question: "18. Un paciente que evita decisiones para 'no equivocarse' tiene un problema de lectura funcional porque:", options: ["La conducta está regulada por evitar sentir, no por avanzar hacia lo importante", "Existe miedo al fracaso", "Falta autoestima", "Hay indecisión crónica"], correct: 0 },
+            { question: "19. En ACT, una intervención se considera efectiva incluso con malestar si:", options: ["El paciente se siente comprendido", "Se reduce la intensidad emocional", "Disminuyen los pensamientos negativos", "La persona actúa con mayor coherencia respecto a sus valores"], correct: 3 },
+            { question: "20. Una paciente evita relaciones cercanas para no sentir culpa. El indicador clínico más relevante es:", options: ["Intensidad de la culpa", "Historia familiar", "Frecuencia de evitación", "Brecha entre la vida que lleva y la que considera valiosa"], correct: 3 },
+            { question: "21. La aceptación en ACT no busca eliminar el sufrimiento porque:", options: ["No es posible hacerlo", "Sería poco realista", "Generaría dependencia", "El sufrimiento no es el criterio que debe guiar la acción"], correct: 3 },
+            { question: "22. Un terapeuta que intenta demostrar que un pensamiento es 'irracional' comete el error de:", options: ["Estar reforzando la lucha con el pensamiento", "Falta psicoeducación", "El paciente no colabora", "Ser demasiado directo"], correct: 0 },
+            { question: "23. En TDC, validar la experiencia de un paciente con TLP implica:", options: ["Aprobar su conducta", "Evitar límites", "Reducir exigencias", "Reconocer su vivencia emocional sin justificar sus actos"], correct: 3 },
+            { question: "24. Una paciente con TLP que se autolesiona y siente alivio inmediato realiza un:", options: ["Manipulación interpersonal", "Falta de control de impulsos", "Intento funcional de regular un estado emocional intolerable", "Conducta aprendida socialmente"], correct: 2 },
+            { question: "25. En TDC, la combinación de aceptación y cambio es necesaria porque:", options: ["Acelera el tratamiento", "Reduce recaídas", "Evita dependencia", "Permite intervenir sin invalidar ni reforzar la conducta problema"], correct: 3 },
+            { question: "26. Si un terapeuta minimiza el sufrimiento de un paciente con TLP, el efecto probable es:", options: ["Aumento de la desregulación emocional y conductas desadaptativas", "Mayor control conductual", "Reducción de la intensidad emocional", "Mejora del insight"], correct: 0 },
+            { question: "27. Desde la teoría biosocial, el TLP se mantiene principalmente porque:", options: ["Existen traumas tempranos", "Hay impulsividad elevada", "Falta regulación cognitiva", "Interactúan sensibilidad emocional elevada y contextos invalidantes"], correct: 3 },
+            { question: "28. Una diferencia clave entre TDC y modelos previos es que TDC:", options: ["Rechaza técnicas conductuales", "Prioriza solo la aceptación", "Evita protocolos", "Integra habilidades conductuales dentro de un marco dialéctico"], correct: 3 },
+            { question: "29. En las terapias de tercera generación, el éxito terapéutico se define por:", options: ["Bienestar subjetivo", "Estabilidad emocional", "Reducción de conductas problema", "Mayor flexibilidad para actuar en contextos importantes pese al malestar"], correct: 3 }
+        ];
+
+        function App() {
+            const [cur, setCur] = useState(0);
+            const [sel, setSel] = useState(null);
+            const [res, setRes] = useState(false);
+            const [pts, setPts] = useState(0);
+
+            const q = questions[cur];
+            const prog = ((cur + 1) / questions.length) * 100;
+
+            const check = () => {
+                if (sel === q.correct) setPts(pts + 1);
+                setRes(true);
+            };
+
+            const next = () => { setCur(cur + 1); setSel(null); setRes(false); };
+            const reset = () => { setCur(0); setSel(null); setRes(false); setPts(0); };
+
+            if (cur >= questions.length) {
+                return (
+                    <div className="container">
+                        <div className="card" style={{textAlign:'center'}}>
+                            <h1>¡Práctica Finalizada!</h1>
+                            <p style={{fontSize:'24px', margin:'20px 0'}}>Puntaje: {pts} / {questions.length}</p>
+                            <button className="btn-primary" onClick={reset}>Reiniciar Test</button>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="container">
+                    <div className="header">
+                        <h1>Módulo TCC y 3ª Generación</h1>
+                        <div className="stats">
+                            <div className="stat"><strong>{pts}</strong>Aciertos</div>
+                            <div className="stat"><strong>{questions.length}</strong>Total</div>
+                            <div className="stat"><strong>{Math.round((pts/(cur||1))*100)}%</strong>Éxito</div>
+                        </div>
+                        <div className="progress-bar"><div className="progress-fill" style={{width:`${prog}%`}}></div></div>
+                    </div>
+                    <div className="card">
+                        <div className="question-number">Pregunta {cur + 1} de {questions.length}</div>
+                        <div className="question-text">{q.question}</div>
+                        <div className="options">
+                            {q.options.map((o, i) => (
+                                <div key={i} className={`option ${sel===i?'selected':''} ${res&&i===q.correct?'correct':''} ${res&&sel===i&&i!==q.correct?'incorrect':''}`} onClick={()=>!res&&setSel(i)}>
+                                    <span className="option-label">{String.fromCharCode(97+i)})</span>{o}
+                                </div>
+                            ))}
+                        </div>
+                        {res && (
+                            <div className={`feedback ${sel===q.correct?'correct':'incorrect'}`}>
+                                {sel===q.correct ? "✅ ¡Correcto!" : `❌ Incorrecto. La respuesta era la: ${String.fromCharCode(97+q.correct)}`}
+                            </div>
+                        )}
+                        <div className="buttons">
+                            {!res ? <button className="btn-primary" onClick={check} disabled={sel===null}>Verificar</button> : <button className="btn-primary" onClick={next}>Siguiente</button>}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
