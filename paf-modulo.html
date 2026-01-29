@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PAF - Práctica Examen</title>
+    <title>PAF - Práctica Examen (Aleatorizado)</title>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -21,6 +21,7 @@
         .question-text { font-size: 18px; line-height: 1.6; color: #2d3748; margin-bottom: 24px; font-weight: 500; }
         .options { display: flex; flex-direction: column; gap: 12px; }
         .option { padding: 16px; border: 2px solid #e2e8f0; border-radius: 12px; cursor: pointer; transition: all 0.2s; font-size: 16px; }
+        .option:hover:not(.disabled) { border-color: #48bb78; background: #f0fff4; }
         .option.selected { border-color: #48bb78; background: #f0fff4; }
         .option.correct { border-color: #48bb78; background: #f0fff4; font-weight: bold; }
         .option.incorrect { border-color: #f56565; background: #fff5f5; }
@@ -39,63 +40,74 @@
 <body>
     <div id="root"></div>
     <script type="text/babel">
-        const { useState } = React;
+        const { useState, useEffect } = React;
 
-        const questions = [
-            { question: "1. La PAF se basa principalmente en:", options: ["Cognitivismo", "Psicoanálisis", "Conductismo radical y análisis funcional", "Humanismo"], correct: 2 },
-            { question: "2. El foco principal de la PAF está en:", options: ["Historia pasada", "Cogniciones", "Conductas que ocurren en sesión", "Síntomas"], correct: 2 },
-            { question: "3. Las conductas clínicamente relevantes (CRB) son aquellas que:", options: ["Ocurren fuera de sesión", "Son narradas por el paciente", "Se emiten dentro de la relación terapéutica", "Son inconscientes"], correct: 2 },
-            { question: "4. Una CRB1 corresponde a:", options: ["Conducta adaptativa en sesión", "Conducta pasada", "Conducta problemática emitida en sesión", "Conducta fuera de sesión"], correct: 2 },
-            { question: "5. Una CRB2 es:", options: ["Recaída", "Conducta evitativa", "Mejoría conductual en sesión", "Conducta gobernada por reglas"], correct: 2 },
-            { question: "6. Una CRB3 implica:", options: ["Conducta emocional", "Insight cognitivo", "Interpretación funcional del propio comportamiento", "Recuerdo autobiográfico"], correct: 2 },
-            { question: "7. El rol del terapeuta en PAF es:", options: ["Neutral", "Interpretativo", "Activo, auténtico y reforzante", "Directivo rígido"], correct: 2 },
-            { question: "8. El reforzamiento en PAF debe ser:", options: ["Programado", "Artificial", "Natural y contingente", "Diferido"], correct: 2 },
-            { question: "9. La equivalencia funcional entre contextos significa que:", options: ["Las conductas son idénticas", "El ambiente es el mismo", "La función de la conducta se mantiene en distintos contextos", "El terapeuta controla el entorno"], correct: 2 },
-            { question: "10. El objetivo del reforzamiento de CRB2 es:", options: ["Eliminar emociones", "Aumentar insight", "Generalizar conductas adaptativas", "Reducir síntomas"], correct: 2 },
-            { question: "11. En PAF, una cognición se entiende como:", options: ["Esquema mental", "Estímulo externo", "Respuesta emocional", "Conducta verbal privada"], correct: 3 },
-            { question: "12. El análisis funcional en PAF se centra en:", options: ["Topografía", "Diagnóstico", "Función de la conducta", "Contenido verbal"], correct: 2 },
-            { question: "13. El modelo A-B-C revisado enfatiza que:", options: ["La conducta depende del pensamiento", "La emoción antecede a la conducta", "La conducta puede ocurrir sin mediación cognitiva", "Siempre hay reglas"], correct: 2 },
-            { question: "14. Una conducta moldeada por contingencias es aquella que:", options: ["Sigue reglas verbales", "Es planificada", "Depende de historia de reforzamiento", "Es racional"], correct: 2 },
-            { question: "15. La conducta gobernada por reglas se caracteriza por:", options: ["Ser emocional", "Estar mediada por verbalizaciones", "Ser automática", "No tener consecuencias"], correct: 1 },
-            { question: "16. En PAF, el terapeuta utiliza su respuesta emocional para:", options: ["Interpretar", "Controlar la sesión", "Informar el análisis funcional", "Evitar implicación"], correct: 2 },
-            { question: "17. La relación terapéutica es considerada:", options: ["Neutral", "Técnica", "Un contexto de aprendizaje", "Secundaria"], correct: 2 },
-            { question: "18. La generalización ocurre cuando:", options: ["El paciente comprende", "Se reduce el síntoma", "La conducta adaptativa aparece fuera de sesión", "Se analiza el pasado"], correct: 2 },
-            { question: "19. En PAF, la autenticidad del terapeuta es importante porque:", options: ["Aumenta empatía", "Facilita insight", "Funciona como estímulo natural", "Reduce resistencia"], correct: 2 },
-            { question: "20. La función de una conducta se define por:", options: ["Su forma", "Su intensidad", "Sus consecuencias", "Su frecuencia"], correct: 2 },
-            { question: "21. La evitación experiencial en PAF se observa cuando:", options: ["El paciente calla", "Evita temas", "Escapa de contingencias interpersonales", "Presenta ansiedad"], correct: 2 },
-            { question: "22. El castigo en PAF se evita porque:", options: ["Es poco ético", "No es conductual", "Daña la relación terapéutica", "Reduce generalización"], correct: 2 },
-            { question: "23. La PAF prioriza:", options: ["Técnicas estructuradas", "Psicoeducación", "Interacción en vivo", "Diagnóstico"], correct: 2 },
-            { question: "24. El cambio terapéutico ocurre cuando:", options: ["El paciente entiende", "Disminuyen síntomas", "Se modifican funciones conductuales", "Cambian cogniciones"], correct: 2 },
-            { question: "25. Una CRB relevante debe ser:", options: ["Frecuente", "Emocional", "Funcionalmente similar al problema externo", "Narrada"], correct: 2 },
-            { question: "26. El terapeuta refuerza CRB2 principalmente mediante:", options: ["Interpretaciones", "Técnicas cognitivas", "Consecuencias interpersonales naturales", "Psicoeducación"], correct: 2 },
-            { question: "27. En PAF, la sesión es vista como:", options: ["Espacio de análisis", "Lugar seguro", "Laboratorio conductual", "Contexto simbólico"], correct: 2 },
-            { question: "28. El análisis funcional sustituye a:", options: ["Diagnóstico DSM", "Entrevista", "Explicaciones topográficas", "Evaluación clínica"], correct: 0 },
-            { question: "29. La mejora clínica se define por:", options: ["Bienestar subjetivo", "Insight", "Cambio conductual generalizado", "Reducción emocional"], correct: 2 },
-            { question: "30. La PAF pertenece a:", options: ["Segunda ola", "Humanismo", "Psicoanálisis", "Tercera ola conductual"], correct: 3 }
+        const rawQuestions = [
+            { question: "1. La PAF se basa principalmente en:", options: ["Cognitivismo", "Psicoanálisis", "Conductismo radical y análisis funcional", "Humanismo"], correctText: "Conductismo radical y análisis funcional" },
+            { question: "2. El foco principal de la PAF está en:", options: ["Historia pasada", "Cogniciones", "Conductas que ocurren en sesión", "Síntomas"], correctText: "Conductas que ocurren en sesión" },
+            { question: "3. Las conductas clínicamente relevantes (CRB) son aquellas que:", options: ["Ocurren fuera de sesión", "Son narradas por el paciente", "Se emiten dentro de la relación terapéutica", "Son inconscientes"], correctText: "Se emiten dentro de la relación terapéutica" },
+            { question: "4. Una CRB1 corresponde a:", options: ["Conducta adaptativa en sesión", "Conducta pasada", "Conducta problemática emitida en sesión", "Conducta fuera de sesión"], correctText: "Conducta problemática emitida en sesión" },
+            { question: "5. Una CRB2 es:", options: ["Recaída", "Conducta evitativa", "Mejoría conductual en sesión", "Conducta gobernada por reglas"], correctText: "Mejoría conductual en sesión" },
+            { question: "6. Una CRB3 implica:", options: ["Conducta emocional", "Insight cognitivo", "Interpretación funcional del propio comportamiento", "Recuerdo autobiográfico"], correctText: "Interpretación funcional del propio comportamiento" },
+            { question: "7. El rol del terapeuta en PAF es:", options: ["Neutral", "Interpretativo", "Activo, auténtico y reforzante", "Directivo rígido"], correctText: "Activo, auténtico y reforzante" },
+            { question: "8. El reforzamiento en PAF debe ser:", options: ["Programado", "Artificial", "Natural y contingente", "Diferido"], correctText: "Natural y contingente" },
+            { question: "9. La equivalencia funcional entre contextos significa que:", options: ["Las conductas son idénticas", "El ambiente es el mismo", "La función de la conducta se mantiene en distintos contextos", "El terapeuta controla el entorno"], correctText: "La función de la conducta se mantiene en distintos contextos" },
+            { question: "10. El objetivo del reforzamiento de CRB2 es:", options: ["Eliminar emociones", "Aumentar insight", "Generalizar conductas adaptativas", "Reducir síntomas"], correctText: "Generalizar conductas adaptativas" },
+            { question: "11. En PAF, una cognición se entiende como:", options: ["Esquema mental", "Estímulo externo", "Respuesta emocional", "Conducta verbal privada"], correctText: "Conducta verbal privada" },
+            { question: "12. El análisis funcional en PAF se centra en:", options: ["Topografía", "Diagnóstico", "Función de la conducta", "Contenido verbal"], correctText: "Función de la conducta" },
+            { question: "13. El modelo A-B-C revisado enfatiza que:", options: ["La conducta depende del pensamiento", "La emoción antecede a la conducta", "La conducta puede ocurrir sin mediación cognitiva", "Siempre hay reglas"], correctText: "La conducta puede ocurrir sin mediación cognitiva" },
+            { question: "14. Una conducta moldeada por contingencias es aquella que:", options: ["Sigue reglas verbales", "Es planificada", "Depende de historia de reforzamiento", "Es racional"], correctText: "Depende de historia de reforzamiento" },
+            { question: "15. La conducta gobernada por reglas se caracteriza por:", options: ["Ser emocional", "Estar mediada por verbalizaciones", "Ser automática", "No tener consecuencias"], correctText: "Estar mediada por verbalizaciones" },
+            { question: "16. En PAF, el terapeuta utiliza su respuesta emocional para:", options: ["Interpretar", "Controlar la sesión", "Informar el análisis funcional", "Evitar implicación"], correctText: "Informar el análisis funcional" },
+            { question: "17. La relación terapéutica es considerada:", options: ["Neutral", "Técnica", "Un contexto de aprendizaje", "Secundaria"], correctText: "Un contexto de aprendizaje" },
+            { question: "18. La generalización ocurre cuando:", options: ["El paciente comprende", "Se reduce el síntoma", "La conducta adaptativa aparece fuera de sesión", "Se analiza el pasado"], correctText: "La conducta adaptativa aparece fuera de sesión" },
+            { question: "19. En PAF, la auténticidad del terapeuta es importante porque:", options: ["Aumenta empatía", "Facilita insight", "Funciona como estímulo natural", "Reduce resistencia"], correctText: "Funciona como estímulo natural" },
+            { question: "20. La función de una conducta se define por:", options: ["Su forma", "Su intensidad", "Sus consecuencias", "Su frecuencia"], correctText: "Sus consecuencias" },
+            { question: "21. La evitación experiencial en PAF se observa cuando:", options: ["El paciente calla", "Evita temas", "Escapa de contingencias interpersonales", "Presenta ansiedad"], correctText: "Escapa de contingencias interpersonales" },
+            { question: "22. El castigo en PAF se evita porque:", options: ["Es poco ético", "No es conductual", "Daña la relación terapéutica", "Reduce generalización"], correctText: "Daña la relación terapéutica" },
+            { question: "23. La PAF prioriza:", options: ["Técnicas estructuradas", "Psicoeducación", "Interacción en vivo", "Diagnóstico"], correctText: "Interacción en vivo" },
+            { question: "24. El cambio terapéutico ocurre cuando:", options: ["El paciente entiende", "Disminuyen síntomas", "Se modifican funciones conductuales", "Cambian cogniciones"], correctText: "Se modifican funciones conductuales" },
+            { question: "25. Una CRB relevante debe ser:", options: ["Frecuente", "Emocional", "Funcionalmente similar al problema externo", "Narrada"], correctText: "Funcionalmente similar al problema externo" },
+            { question: "26. El terapeuta refuerza CRB2 principalmente mediante:", options: ["Interpretaciones", "Técnicas cognitivas", "Consecuencias interpersonales naturales", "Psicoeducación"], correctText: "Consecuencias interpersonales naturales" },
+            { question: "27. En PAF, la sesión es vista como:", options: ["Espacio de análisis", "Lugar seguro", "Laboratorio conductual", "Contexto simbólico"], correctText: "Laboratorio conductual" },
+            { question: "28. El análisis funcional sustituye a:", options: ["Diagnóstico DSM", "Entrevista", "Explicaciones topográficas", "Evaluación clínica"], correctText: "Diagnóstico DSM" },
+            { question: "29. La mejora clínica se define por:", options: ["Bienestar subjetivo", "Insight", "Cambio conductual generalizado", "Reducción emocional"], correctText: "Cambio conductual generalizado" },
+            { question: "30. La PAF pertenece a:", options: ["Segunda ola", "Humanismo", "Psicoanálisis", "Tercera ola conductual"], correctText: "Tercera ola conductual" }
         ];
 
         function App() {
             const [cur, setCur] = useState(0);
+            const [shuffledOptions, setShuffledOptions] = useState([]);
             const [sel, setSel] = useState(null);
             const [res, setRes] = useState(false);
             const [pts, setPts] = useState(0);
 
-            const q = questions[cur];
-            const prog = ((cur + 1) / questions.length) * 100;
+            const q = rawQuestions[cur];
+
+            useEffect(() => {
+                if (cur < rawQuestions.length) {
+                    const options = [...rawQuestions[cur].options];
+                    for (let i = options.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [options[i], options[j]] = [options[j], options[i]];
+                    }
+                    setShuffledOptions(options);
+                }
+            }, [cur]);
 
             const check = () => {
-                if (sel === q.correct) setPts(pts + 1);
+                if (shuffledOptions[sel] === q.correctText) setPts(pts + 1);
                 setRes(true);
             };
 
             const next = () => { setCur(cur + 1); setSel(null); setRes(false); };
 
-            if (cur >= questions.length) {
+            if (cur >= rawQuestions.length) {
                 return (
                     <div className="container">
                         <div className="card" style={{textAlign:'center'}}>
                             <h1>🎉 ¡Cuestionario Completado!</h1>
-                            <p style={{fontSize: '24px', margin: '20px 0'}}>Resultado: {pts} / {questions.length}</p>
+                            <p style={{fontSize: '24px', margin: '20px 0'}}>Resultado: {pts} / {rawQuestions.length}</p>
                             <button className="btn-primary" onClick={() => window.location.reload()}>Reiniciar</button>
                         </div>
                     </div>
@@ -108,23 +120,28 @@
                         <h1>Psicoterapia Analítico-Funcional</h1>
                         <div className="stats">
                             <div className="stat"><strong>{pts}</strong>Aciertos</div>
-                            <div className="stat"><strong>{questions.length}</strong>Total</div>
+                            <div className="stat"><strong>{rawQuestions.length}</strong>Total</div>
                         </div>
-                        <div className="progress-bar"><div className="progress-fill" style={{width: `${prog}%`}}></div></div>
+                        <div className="progress-bar"><div className="progress-fill" style={{width: `${((cur+1)/rawQuestions.length)*100}%`}}></div></div>
                     </div>
                     <div className="card">
-                        <div className="question-number">Pregunta {cur + 1} de {questions.length}</div>
+                        <div className="question-number">Pregunta {cur + 1} de {rawQuestions.length}</div>
                         <div className="question-text">{q.question}</div>
                         <div className="options">
-                            {q.options.map((o, i) => (
-                                <div key={i} className={`option ${sel===i?'selected':''} ${res&&i===q.correct?'correct':''} ${res&&sel===i&&i!==q.correct?'incorrect':''}`} onClick={()=>!res&&setSel(i)}>
+                            {shuffledOptions.map((o, i) => {
+                                let cName = "option";
+                                if (sel === i) cName += " selected";
+                                if (res && o === q.correctText) cName += " correct";
+                                if (res && sel === i && o !== q.correctText) cName += " incorrect";
+                                if (res) cName += " disabled";
+                                return <div key={i} className={cName} onClick={() => !res && setSel(i)}>
                                     <span className="option-label">{String.fromCharCode(97+i)})</span>{o}
                                 </div>
-                            ))}
+                            })}
                         </div>
                         {res && (
-                            <div className={`feedback ${sel===q.correct?'correct':'incorrect'}`}>
-                                {sel===q.correct ? "✅ ¡Muy bien!" : `❌ Incorrecto. La respuesta es la: ${String.fromCharCode(97+q.correct)}`}
+                            <div className={`feedback ${shuffledOptions[sel] === q.correctText ? 'correct' : 'incorrect'}`}>
+                                {shuffledOptions[sel] === q.correctText ? "✅ ¡Muy bien! Reforzando CRB2." : `❌ Incorrecto. La respuesta era: ${q.correctText}`}
                             </div>
                         )}
                         <div className="buttons">
