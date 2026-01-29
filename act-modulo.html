@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACT - Práctica con Aleatoriedad</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        .header { background: white; border-radius: 16px; padding: 24px; margin-bottom: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+        .header h1 { color: #764ba2; font-size: 28px; margin-bottom: 8px; }
+        .stats { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+        .stat { background: #f3f0ff; padding: 12px 16px; border-radius: 8px; font-size: 14px; flex: 1; min-width: 100px; text-align: center; }
+        .stat strong { color: #764ba2; font-size: 20px; display: block; }
+        .card { background: white; border-radius: 16px; padding: 32px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+        .question-number { color: #764ba2; font-weight: 600; font-size: 14px; margin-bottom: 16px; }
+        .question-text { font-size: 18px; line-height: 1.6; color: #2d3748; margin-bottom: 24px; font-weight: 500; }
+        .options { display: flex; flex-direction: column; gap: 12px; }
+        .option { padding: 16px; border: 2px solid #e2e8f0; border-radius: 12px; cursor: pointer; transition: all 0.2s; font-size: 16px; }
+        .option:hover:not(.disabled) { border-color: #764ba2; background: #f3f0ff; }
+        .option.selected { border-color: #764ba2; background: #f3f0ff; }
+        .option.correct { border-color: #48bb78; background: #f0fff4; font-weight: bold; }
+        .option.incorrect { border-color: #f56565; background: #fff5f5; }
+        .option-label { font-weight: 600; margin-right: 8px; color: #764ba2; }
+        .buttons { display: flex; gap: 12px; margin-top: 24px; }
+        button { padding: 14px 28px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; flex: 1; }
+        .btn-primary { background: #764ba2; color: white; }
+        .btn-primary:disabled { background: #cbd5e0; cursor: not-allowed; }
+        .feedback { margin-top: 20px; padding: 16px; border-radius: 12px; font-size: 15px; }
+        .feedback.correct { background: #f0fff4; border: 2px solid #48bb78; color: #22543d; }
+        .feedback.incorrect { background: #fff5f5; border: 2px solid #f56565; color: #742a2a; }
+        .progress-bar { height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin-top: 16px; }
+        .progress-fill { height: 100%; background: #764ba2; transition: width 0.3s ease; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const rawQuestions = [
+            { question: "1. ACT se enmarca dentro de:", options: ["Terapias cognitivas clásicas", "Psicoanálisis contemporáneo", "Conductismo radical tradicional", "Terapias contextuales de tercera ola"], correctText: "Terapias contextuales de tercera ola" },
+            { question: "2. El objetivo central de ACT es:", options: ["Reducir síntomas", "Cambiar pensamientos negativos", "Controlar emociones", "Incrementar la flexibilidad psicológica"], correctText: "Incrementar la flexibilidad psicológica" },
+            { question: "3. La flexibilidad psicológica se define como:", options: ["Capacidad de adaptación cognitiva", "Control emocional", "Ausencia de malestar", "Contacto con el momento presente y acción guiada por valores"], correctText: "Contacto con el momento presente y acción guiada por valores" },
+            { question: "4. Según ACT, el sufrimiento humano se explica principalmente por:", options: ["Eventos traumáticos", "Déficits emocionales", "Evitación experiencial y fusión cognitiva", "Falta de insight"], correctText: "Evitación experiencial y fusión cognitiva" },
+            { question: "5. La evitación experiencial implica:", options: ["Evitar estímulos externos", "Intentar controlar o eliminar experiencias internas", "Reprimir recuerdos", "Negar emociones conscientemente"], correctText: "Intentar controlar o eliminar experiencias internas" },
+            { question: "6. En ACT, el lenguaje humano se explica a partir de:", options: ["Condicionamiento clásico", "Asociaciones físicas", "Procesos cognitivos innatos", "Teoría del Marco Relacional"], correctText: "Teoría del Marco Relacional" },
+            { question: "7. La Teoría del Marco Relacional plantea que:", options: ["El lenguaje es innato", "El significado es fijo", "Las personas relacionan estímulos de forma arbitraria", "El lenguaje se aprende por imitación"], correctText: "Las personas relacionan estímulos de forma arbitraria" },
+            { question: "8. Un marco relacional se caracteriza por ser:", options: ["Biológico", "Sensorial", "Automático", "Arbitrariamente aplicable"], correctText: "Arbitrariamente aplicable" },
+            { question: "9. En ACT, un pensamiento tiene efecto problemático cuando:", options: ["Es negativo", "Es irracional", "Domina la conducta del individuo", "Genera emociones intensas"], correctText: "Domina la conducta del individuo" },
+            { question: "10. La defusión cognitiva busca:", options: ["Cambiar el contenido del pensamiento", "Eliminar pensamientos", "Reducir emociones", "Modificar la función del pensamiento sobre la conducta"], correctText: "Modificar la función del pensamiento sobre la conducta" },
+            { question: "11. Un ejemplo de defusión es:", options: ["Rebatir un pensamiento", "Analizar su origen", "Observar el pensamiento como evento mental", "Sustituirlo por otro"], correctText: "Observar el pensamiento como evento mental" },
+            { question: "12. La aceptación en ACT significa:", options: ["Resignación", "Pasividad", "Aprobación del malestar", "Apertura activa a la experiencia interna"], correctText: "Apertura activa a la experiencia interna" },
+            { question: "13. El yo como contexto implica:", options: ["Identidad fija", "Autoconcepto estable", "Perspectiva desde la cual se observa la experiencia", "Autoestima positiva"], correctText: "Perspectiva desde la cual se observa la experiencia" },
+            { question: "14. El yo conceptualizado se relaciona con:", options: ["Experiencia directa", "Mindfulness", "Historias verbales sobre uno mismo", "Valores"], correctText: "Historias verbales sobre uno mismo" },
+            { question: "15. En ACT, los valores son:", options: ["Metas alcanzables", "Reglas externas", "Reforzadores sociales", "Direcciones elegidas de acción"], correctText: "Direcciones elegidas de acción" },
+            { question: "16. Una meta se diferencia de un valor porque:", options: ["Es más importante", "Es interna", "Tiene un punto final definido", "No depende del contexto"], correctText: "Tiene un punto final definido" },
+            { question: "17. La acción comprometida implica:", options: ["Ausencia de miedo", "Seguridad emocional", "Conductas consistentes con valores pese al malestar", "Motivación externa"], correctText: "Conductas consistentes con valores pese al malestar" },
+            { question: "18. El contacto con el momento presente se refiere a:", options: ["Pensar en el ahora", "Controlar la atención", "Atención flexible a la experiencia actual", "Eliminar distracciones"], correctText: "Atención flexible a la experiencia actual" },
+            { question: "19. El mindfulness en ACT se utiliza para:", options: ["Relajación", "Distracción", "Aumentar conciencia y flexibilidad", "Control cognitivo"], correctText: "Aumentar conciencia y flexibilidad" },
+            { question: "20. En ACT, el dolor crónico pierde función adaptativa cuando:", options: ["Es intenso", "Depende de emociones", "Se mantiene sin relación con daño actual", "Es evitable"], correctText: "Se mantiene sin relación con daño actual" },
+            { question: "21. La fusión cognitiva implica que:", options: ["Los pensamientos son irreales", "Se eliminan emociones", "Los pensamientos se viven como verdades literales", "Hay insight excesivo"], correctText: "Los pensamientos se viven como verdades literales" },
+            { question: "22. ACT no busca:", options: ["Aumentar valores", "Flexibilidad psicológica", "Acción comprometida", "Eliminar pensamientos negativos"], correctText: "Eliminar pensamientos negativos" },
+            { question: "23. Un terapeuta ACT se enfoca principalmente en:", options: ["Insight intelectual", "Cambio cognitivo", "Contexto y función de la conducta", "Diagnóstico"], correctText: "Contexto y función de la conducta" },
+            { question: "24. En ACT, el síntoma se entiende como:", options: ["Patología central", "Falla personal", "Producto de intentos fallidos de control", "Déficit emocional"], correctText: "Producto de intentos fallidos de control" },
+            { question: "25. La desesperanza creativa se utiliza para:", options: ["Desmotivar", "Inducir tristeza", "Cuestionar estrategias ineficaces de control", "Eliminar síntomas"], correctText: "Cuestionar estrategias ineficaces de control" },
+            { question: "26. Un ejercicio experiencial en ACT busca:", options: ["Insight racional", "Aprendizaje intelectual", "Cambio funcional, no explicativo", "Psicoeducación"], correctText: "Cambio funcional, no explicativo" },
+            { question: "27. La metáfora en ACT sirve para:", options: ["Enseñar teoría", "Explicar conceptos", "Debilitar la literalidad del lenguaje", "Motivar emocionalmente"], correctText: "Debilitar la literalidad del lenguaje" },
+            { question: "28. El modelo hexaflex representa:", options: ["Técnicas de ACT", "Etapas del tratamiento", "Procesos de la flexibilidad psicológica", "Objetivos terapéuticos"], correctText: "Procesos de la flexibilidad psicológica" },
+            { question: "29. La psicopatología, desde ACT, se relaciona con:", options: ["Diagnósticos DSM", "Trastornos específicos", "Rigidez en los procesos del hexaflex", "Trauma temprano"], correctText: "Rigidez en los procesos del hexaflex" },
+            { question: "30. ACT considera el malestar psicológico como:", options: ["Evitable", "Patológico", "Disfuncional siempre", "Parte inevitable de la experiencia humana"], correctText: "Parte inevitable de la experiencia humana" }
+        ];
+
+        function App() {
+            const [cur, setCur] = useState(0);
+            const [shuffledOptions, setShuffledOptions] = useState([]);
+            const [sel, setSel] = useState(null);
+            const [res, setRes] = useState(false);
+            const [pts, setPts] = useState(0);
+
+            const q = rawQuestions[cur];
+
+            // Función para barajar las opciones cada vez que cambia la pregunta
+            useEffect(() => {
+                if (cur < rawQuestions.length) {
+                    const options = [...rawQuestions[cur].options];
+                    for (let i = options.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [options[i], options[j]] = [options[j], options[i]];
+                    }
+                    setShuffledOptions(options);
+                }
+            }, [cur]);
+
+            const check = () => {
+                if (shuffledOptions[sel] === q.correctText) setPts(pts + 1);
+                setRes(true);
+            };
+
+            const next = () => { setCur(cur + 1); setSel(null); setRes(false); };
+
+            if (cur >= rawQuestions.length) {
+                return (
+                    <div className="container">
+                        <div className="card" style={{textAlign:'center'}}>
+                            <h1>🧩 ¡Flexibilidad Alcanzada!</h1>
+                            <p style={{fontSize: '24px', margin: '20px 0'}}>Puntaje: {pts} / {rawQuestions.length}</p>
+                            <button className="btn-primary" onClick={() => window.location.reload()}>Reiniciar</button>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="container">
+                    <div className="header">
+                        <h1>Terapia de Aceptación y Compromiso</h1>
+                        <div className="stats">
+                            <div className="stat"><strong>{pts}</strong>Aciertos</div>
+                            <div className="stat"><strong>{rawQuestions.length}</strong>Total</div>
+                        </div>
+                        <div className="progress-bar"><div className="progress-fill" style={{width: `${((cur+1)/rawQuestions.length)*100}%`}}></div></div>
+                    </div>
+                    <div className="card">
+                        <div className="question-number">Pregunta {cur + 1} de {rawQuestions.length}</div>
+                        <div className="question-text">{q.question}</div>
+                        <div className="options">
+                            {shuffledOptions.map((o, i) => {
+                                let cName = "option";
+                                if (sel === i) cName += " selected";
+                                if (res && o === q.correctText) cName += " correct";
+                                if (res && sel === i && o !== q.correctText) cName += " incorrect";
+                                if (res) cName += " disabled";
+                                return <div key={i} className={cName} onClick={() => !res && setSel(i)}>
+                                    <span className="option-label">{String.fromCharCode(97+i)})</span>{o}
+                                </div>
+                            })}
+                        </div>
+                        {res && (
+                            <div className={`feedback ${shuffledOptions[sel] === q.correctText ? 'correct' : 'incorrect'}`}>
+                                {shuffledOptions[sel] === q.correctText ? "✅ ¡Muy bien! Actuando bajo valores." : `❌ No es correcto. La respuesta era: ${q.correctText}`}
+                            </div>
+                        )}
+                        <div className="buttons">
+                            {!res ? <button className="btn-primary" onClick={check} disabled={sel===null}>Verificar</button> 
+                                  : <button className="btn-primary" onClick={next}>Siguiente →</button>}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
