@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DBT - Práctica con Aleatoriedad</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #f687b3 0%, #9f7aea 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        .header { background: white; border-radius: 16px; padding: 24px; margin-bottom: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+        .header h1 { color: #b83280; font-size: 28px; margin-bottom: 8px; }
+        .stats { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+        .stat { background: #fff5f7; padding: 12px 16px; border-radius: 8px; font-size: 14px; flex: 1; min-width: 100px; text-align: center; }
+        .stat strong { color: #b83280; font-size: 20px; display: block; }
+        .card { background: white; border-radius: 16px; padding: 32px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+        .question-number { color: #b83280; font-weight: 600; font-size: 14px; margin-bottom: 16px; }
+        .question-text { font-size: 18px; line-height: 1.6; color: #2d3748; margin-bottom: 24px; font-weight: 500; }
+        .options { display: flex; flex-direction: column; gap: 12px; }
+        .option { padding: 16px; border: 2px solid #e2e8f0; border-radius: 12px; cursor: pointer; transition: all 0.2s; font-size: 16px; }
+        .option:hover:not(.disabled) { border-color: #f687b3; background: #fff5f7; }
+        .option.selected { border-color: #f687b3; background: #fff5f7; }
+        .option.correct { border-color: #48bb78; background: #f0fff4; font-weight: bold; }
+        .option.incorrect { border-color: #f56565; background: #fff5f5; }
+        .option-label { font-weight: 600; margin-right: 8px; color: #b83280; }
+        .buttons { display: flex; gap: 12px; margin-top: 24px; }
+        button { padding: 14px 28px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; flex: 1; }
+        .btn-primary { background: #d53f8c; color: white; }
+        .btn-primary:disabled { background: #cbd5e0; cursor: not-allowed; }
+        .feedback { margin-top: 20px; padding: 16px; border-radius: 12px; font-size: 15px; }
+        .feedback.correct { background: #f0fff4; border: 2px solid #48bb78; color: #22543d; }
+        .feedback.incorrect { background: #fff5f5; border: 2px solid #f56565; color: #742a2a; }
+        .progress-bar { height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin-top: 16px; }
+        .progress-fill { height: 100%; background: #f687b3; transition: width 0.3s ease; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const rawQuestions = [
+            { question: "1. La DBT se considera un modelo dialéctico porque:", options: ["Rechaza el cambio conductual", "Prioriza la aceptación", "Alterna aceptación y cambio", "Busca una síntesis funcional entre aceptación y cambio"], correctText: "Busca una síntesis funcional entre aceptación y cambio" },
+            { question: "2. La teoría biosocial plantea que el TLP surge por:", options: ["Aprendizaje social disfuncional", "Conflictos intrapsíquicos", "Déficits cognitivos", "Interacción entre vulnerabilidad biológica y ambiente invalidante"], correctText: "Interacción entre vulnerabilidad biológica y ambiente invalidante" },
+            { question: "3. La vulnerabilidad biológica en DBT se relaciona con:", options: ["Baja autoestima", "Alta sensibilidad emocional y lenta recuperación", "Estilos parentales rígidos", "Pensamiento dicotómico"], correctText: "Alta sensibilidad emocional y lenta recuperación" },
+            { question: "4. Un ambiente invalidante se caracteriza por:", options: ["Refuerzo constante", "Neutralidad emocional", "Minimización o castigo de la experiencia emocional", "Exceso de normas"], correctText: "Minimización o castigo de la experiencia emocional" },
+            { question: "5. La disregulación emocional implica dificultades en:", options: ["Comprensión cognitiva", "Identificación, modulación y expresión emocional", "Memoria emocional", "Lenguaje emocional"], correctText: "Identificación, modulación y expresión emocional" },
+            { question: "6. En la jerarquía de objetivos de DBT, la primera prioridad es:", options: ["Relaciones interpersonales", "Autoestima", "Conductas que amenazan la vida", "Mindfulness"], correctText: "Conductas que amenazan la vida" },
+            { question: "7. Las conductas que interfieren con la terapia se trabajan porque:", options: ["Retrasan el proceso", "Dañan la alianza", "Generan abandono", "Todas las anteriores"], correctText: "Todas las anteriores" },
+            { question: "8. El formato estándar de DBT incluye:", options: ["Solo terapia individual", "Terapia de grupo y farmacología", "Terapia individual, grupo de habilidades, coaching telefónico y equipo de consulta", "Psicoeducación familiar únicamente"], correctText: "Terapia individual, grupo de habilidades, coaching telefónico y equipo de consulta" },
+            { question: "9. El grupo de entrenamiento en habilidades busca:", options: ["Analizar el pasado", "Adquirir capacidades de regulación y eficacia", "Fomentar la catarsis", "Sustituir la terapia individual"], correctText: "Adquirir capacidades de regulación y eficacia" },
+            { question: "10. El equipo de consulta del terapeuta sirve para:", options: ["Supervisar al paciente", "Tratar al terapeuta y evitar el burnout", "Decidir el alta médica", "Organizar las citas"], correctText: "Tratar al terapeuta y evitar el burnout" },
+            { question: "11. El módulo de Mindfulness en DBT enseña:", options: ["Relajación profunda", "Controlar los pensamientos", "Participar con conciencia en el presente sin juzgar", "Evitar el dolor"], correctText: "Participar con conciencia en el presente sin juzgar" },
+            { question: "12. Las habilidades de 'Eficacia Interpersonal' se centran en:", options: ["Manipular a otros", "Pedir lo que se necesita y decir 'no' manteniendo la relación", "Evitar conflictos", "Aislarse de personas tóxicas"], correctText: "Pedir lo que se necesita y decir 'no' manteniendo la relación" },
+            { question: "13. La 'Regulación Emocional' en DBT busca:", options: ["Eliminar emociones negativas", "Comprender y cambiar respuestas emocionales disfuncionales", "Reprimir impulsos", "Ignorar el malestar"], correctText: "Comprender y cambiar respuestas emocionales disfuncionales" },
+            { question: "14. La 'Tolerancia al Malestar' es útil para:", options: ["Resolver el problema de raíz", "Sobrevivir a crisis sin empeorar las cosas", "Analizar cogniciones", "Sentirse feliz"], correctText: "Sobrevivir a crisis sin empeorar las cosas" },
+            { question: "15. La validación en DBT implica:", options: ["Estar de acuerdo con todo lo que hace el paciente", "Confirmar que la conducta del paciente tiene sentido en su contexto", "Aprobar conductas de riesgo", "Reforzar la victimización"], correctText: "Confirmar que la conducta del paciente tiene sentido en su contexto" },
+            { question: "16. El nivel más alto de validación es:", options: ["Escucha radical", "Reflejar sentimientos", "Validación basada en la historia", "Tratar al paciente como un igual (validación radical)"], correctText: "Tratar al paciente como un igual (validación radical)" },
+            { question: "17. El análisis en cadena en DBT se usa para:", options: ["Castigar conductas", "Entender paso a paso qué llevó a una conducta problema", "Mejorar la memoria", "Asociar ideas libres"], correctText: "Entender paso a paso qué llevó a una conducta problema" },
+            { question: "18. El concepto de 'Mente Sabia' es la integración de:", options: ["Mente consciente y mente inconsciente", "Mente emocional y mente racional", "Mente biológica y mente social", "Mente pasada y mente futura"], correctText: "Mente emocional y mente racional" },
+            { question: "19. Las habilidades 'Qué' del mindfulness son:", options: ["Observar, Describir, Participar", "No juzgar, Eficacia, Una cosa a la vez", "Pensar, Sentir, Actuar", "Callar, Escuchar, Mirar"], correctText: "Observar, Describir, Participar" },
+            { question: "20. La terapia multifamiliar en DBT busca:", options: ["Sustituir al terapeuta", "Entrenar habilidades y reducir la invalidación familiar", "Dar medicación a todos", "Fomentar la dependencia familiar"], correctText: "Entrenar habilidades y reducir la invalidación familiar" },
+            { question: "21. La invalidación repetida genera:", options: ["Dependencia", "Resiliencia", "Escalada emocional y desconfianza en la propia experiencia", "Insight"], correctText: "Escalada emocional y desconfianza en la propia experiencia" },
+            { question: "22. DBT concibe el suicidio como:", options: ["Manipulación", "Elección racional", "Conducta aprendida para regular un malestar intolerable", "Rasgo de personalidad"], correctText: "Conducta aprendida para regular un malestar intolerable" },
+            { question: "23. El coaching telefónico sirve para:", options: ["Dar terapia de larga duración", "Manejar emergencias y generalizar habilidades a la vida diaria", "Hacer amigos", "Cobrar sesiones"], correctText: "Manejar emergencias y generalizar habilidades a la vida diaria" },
+            { question: "24. La postura del terapeuta en DBT es:", options: ["Neutral", "Directiva rígida", "Validante y directiva (estilo dialéctico)", "Interpretativa"], correctText: "Validante y directiva (estilo dialéctico)" },
+            { question: "25. La dialéctica central del tratamiento es:", options: ["Terapia vs medicación", "Emoción vs cognición", "Aceptación del paciente + necesidad de cambio", "Individuo vs familia"], correctText: "Aceptación del paciente + necesidad de cambio" },
+            { question: "26. DBT pertenece a:", options: ["Primera ola", "Segunda ola", "Tercera ola (contextual)", "Psicodinámica"], correctText: "Tercera ola (contextual)" },
+            { question: "27. En DBT, el malestar emocional se considera:", options: ["Patológico siempre", "Evitable", "Parte inevitable de la experiencia humana", "Signo de debilidad"], correctText: "Parte inevitable de la experiencia humana" },
+            { question: "28. El refuerzo en DBT se usa para:", options: ["Castigar errores", "Aumentar conductas adaptativas", "Controlar la mente", "Eliminar la personalidad"], correctText: "Aumentar conductas adaptativas" },
+            { question: "29. El abandono terapéutico se previene mediante:", options: ["Confrontación", "Interpretación", "Validación y estructura clara de la terapia", "Amenazas"], correctText: "Validación y estructura clara de la terapia" },
+            { question: "30. La meta final de DBT es:", options: ["Eliminar síntomas", "Ser feliz siempre", "Construir una vida que valga la pena ser vivida", "Aprender teoría"], correctText: "Construir una vida que valga la pena ser vivida" }
+        ];
+
+        function App() {
+            const [cur, setCur] = useState(0);
+            const [shuffledOptions, setShuffledOptions] = useState([]);
+            const [sel, setSel] = useState(null);
+            const [res, setRes] = useState(false);
+            const [pts, setPts] = useState(0);
+
+            const q = rawQuestions[cur];
+
+            useEffect(() => {
+                if (cur < rawQuestions.length) {
+                    const options = [...rawQuestions[cur].options];
+                    for (let i = options.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [options[i], options[j]] = [options[j], options[i]];
+                    }
+                    setShuffledOptions(options);
+                }
+            }, [cur]);
+
+            const check = () => {
+                if (shuffledOptions[sel] === q.correctText) setPts(pts + 1);
+                setRes(true);
+            };
+
+            const next = () => { setCur(cur + 1); setSel(null); setRes(false); };
+
+            if (cur >= rawQuestions.length) {
+                return (
+                    <div className="container">
+                        <div className="card" style={{textAlign:'center'}}>
+                            <h1>⚖️ ¡Mente Sabia Alcanzada!</h1>
+                            <p style={{fontSize: '24px', margin: '20px 0'}}>Resultado Final: {pts} / {rawQuestions.length}</p>
+                            <button className="btn-primary" onClick={() => window.location.reload()}>Volver a Practicar</button>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="container">
+                    <div className="header">
+                        <h1>Terapia Dialéctica Conductual (DBT)</h1>
+                        <div className="stats">
+                            <div className="stat"><strong>{pts}</strong>Aciertos</div>
+                            <div className="stat"><strong>{rawQuestions.length}</strong>Total</div>
+                        </div>
+                        <div className="progress-bar"><div className="progress-fill" style={{width: `${((cur+1)/rawQuestions.length)*100}%`}}></div></div>
+                    </div>
+                    <div className="card">
+                        <div className="question-number">Pregunta {cur + 1} de {rawQuestions.length}</div>
+                        <div className="question-text">{q.question}</div>
+                        <div className="options">
+                            {shuffledOptions.map((o, i) => {
+                                let cName = "option";
+                                if (sel === i) cName += " selected";
+                                if (res && o === q.correctText) cName += " correct";
+                                if (res && sel === i && o !== q.correctText) cName += " incorrect";
+                                if (res) cName += " disabled";
+                                return <div key={i} className={cName} onClick={() => !res && setSel(i)}>
+                                    <span className="option-label">{String.fromCharCode(97+i)})</span>{o}
+                                </div>
+                            })}
+                        </div>
+                        {res && (
+                            <div className={`feedback ${shuffledOptions[sel] === q.correctText ? 'correct' : 'incorrect'}`}>
+                                {shuffledOptions[sel] === q.correctText ? "✅ ¡Excelente! Respuesta validada." : `❌ Incorrecto. La respuesta correcta es: ${q.correctText}`}
+                            </div>
+                        )}
+                        <div className="buttons">
+                            {!res ? <button className="btn-primary" onClick={check} disabled={sel===null}>Verificar</button> 
+                                  : <button className="btn-primary" onClick={next}>Siguiente →</button>}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
