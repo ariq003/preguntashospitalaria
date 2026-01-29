@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulacro de Examen - Práctica</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #2c3e50 0%, #4ca1af 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        .header { background: white; border-radius: 16px; padding: 24px; margin-bottom: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+        .header h1 { color: #2c3e50; font-size: 28px; margin-bottom: 8px; }
+        .stats { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+        .stat { background: #f0f4f8; padding: 12px 16px; border-radius: 8px; font-size: 14px; flex: 1; min-width: 100px; text-align: center; }
+        .stat strong { color: #2c3e50; font-size: 20px; display: block; }
+        .card { background: white; border-radius: 16px; padding: 32px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+        .question-number { color: #4ca1af; font-weight: 600; font-size: 14px; margin-bottom: 16px; }
+        .question-text { font-size: 18px; line-height: 1.6; color: #2d3748; margin-bottom: 24px; font-weight: 500; }
+        .options { display: flex; flex-direction: column; gap: 12px; }
+        .option { padding: 16px; border: 2px solid #e2e8f0; border-radius: 12px; cursor: pointer; transition: all 0.2s; font-size: 16px; }
+        .option:hover:not(.disabled) { border-color: #4ca1af; background: #f0f9fa; }
+        .option.selected { border-color: #4ca1af; background: #f0f9fa; }
+        .option.correct { border-color: #48bb78; background: #f0fff4; font-weight: bold; }
+        .option.incorrect { border-color: #f56565; background: #fff5f5; }
+        .option-label { font-weight: 600; margin-right: 8px; color: #2c3e50; }
+        .buttons { display: flex; gap: 12px; margin-top: 24px; }
+        button { padding: 14px 28px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; flex: 1; }
+        .btn-primary { background: #2c3e50; color: white; }
+        .btn-primary:disabled { background: #cbd5e0; cursor: not-allowed; }
+        .feedback { margin-top: 20px; padding: 16px; border-radius: 12px; font-size: 15px; }
+        .feedback.correct { background: #f0fff4; border: 2px solid #48bb78; color: #22543d; }
+        .feedback.incorrect { background: #fff5f5; border: 2px solid #f56565; color: #742a2a; }
+        .progress-bar { height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin-top: 16px; }
+        .progress-fill { height: 100%; background: #4ca1af; transition: width 0.3s ease; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const rawQuestions = [
+            { question: "1. La Teoría del Marco Relacional enfatiza que el lenguaje humano se basa en:", options: ["Procesos cognitivos innatos", "Asociaciones físicas", "Condicionamiento clásico", "Relaciones arbitrarias entre estímulos"], correctText: "Relaciones arbitrarias entre estímulos" },
+            { question: "2. En ACT, el dolor crónico pierde su función adaptativa porque:", options: ["Se mantiene sin relación con daño actual", "Es emocionalmente intenso", "Depende solo de factores físicos", "Siempre es evitable"], correctText: "Se mantiene sin relación con daño actual" },
+            { question: "3. La TDC integra aceptación y cambio porque:", options: ["La aceptación sustituye al cambio", "El cambio es secundario", "Ambas estrategias se alternan", "Busca una síntesis funcional entre polos opuestos"], correctText: "Busca una síntesis funcional entre polos opuestos" },
+            { question: "4. Según la teoría biosocial de la TDC, el TLP surge por:", options: ["Déficit cognitivo", "Interacción entre vulnerabilidad biológica y ambiente invalidante", "Conflictos inconscientes", "Refuerzos sociales inadecuados"], correctText: "Interacción entre vulnerabilidad biológica y ambiente invalidante" },
+            { question: "5. Desde la PAF, la equivalencia funcional entre contextos implica que:", options: ["El terapeuta controla el ambiente externo", "Las consecuencias siempre son reforzantes", "Las conductas son idénticas", "Las funciones de la conducta pueden mantenerse en distintos ambientes"], correctText: "Las funciones de la conducta pueden mantenerse en distintos ambientes" },
+            { question: "6. En el modelo A-B-C revisado desde la PAF, cuando la conducta ocurre sin pensamiento previo se considera:", options: ["Gobernada por reglas", "Mediada por cogniciones", "Controlada por emociones", "Moldeada por contingencias"], correctText: "Moldeada por contingencias" },
+            { question: "7. En la TDC para adolescentes, el módulo 'camino del medio' se orienta a:", options: ["Confrontación emocional", "Conductas menos polarizadas y validación familiar", "Mindfulness", "Autonomía total"], correctText: "Conductas menos polarizadas y validación familiar" },
+            { question: "8. En la jerarquía de objetivos de la TDC, la prioridad inicial es:", options: ["Mejorar relaciones interpersonales", "Reducir conductas que amenazan la vida", "Aumentar autoestima", "Incrementar habilidades sociales"], correctText: "Reducir conductas que amenazan la vida" },
+            { question: "9. En ACT, la defusión cognitiva busca:", options: ["Cambiar contenido de pensamientos", "Controlar emociones", "Modificar la función de los pensamientos sobre la conducta", "Eliminar pensamientos negativos"], correctText: "Modificar la función de los pensamientos sobre la conducta" },
+            { question: "10. Uno de los cuatro componentes del formato estándar de TDC es:", options: ["Psicoanálisis", "Terapia farmacológica", "Entrenamiento en habilidades grupal", "Exposición prolongada"], correctText: "Entrenamiento en habilidades grupal" },
+            { question: "11. La flexibilidad psicológica en ACT se expresa conductualmente cuando la persona:", options: ["Controla sus emociones", "Eliminar recuerdos dolorosos", "Actúa en función de valores pese al malestar", "Reduce la frecuencia de pensamientos negativos"], correctText: "Actúa en función de valores pese al malestar" },
+            { question: "12. Según la PAF, una cognición es funcionalmente equivalente a:", options: ["Una conducta verbal privada", "Un estímulo discriminativo externo", "Una respuesta emocional refleja", "Un esquema cognitivo estable"], correctText: "Una conducta verbal privada" },
+            { question: "13. En PAF, utilizar la relación terapéutica como contexto de intervención implica principalmente:", options: ["Moldear en vivo conductas clínicamente relevantes", "Reforzar conductas del cliente que ocurren fuera de sesión", "Aplicar psicoeducación estructurada", "Modificar creencias disfuncionales"], correctText: "Moldear en vivo conductas clínicamente relevantes" },
+            { question: "14. Desde ACT, el sufrimiento humano se incrementa principalmente cuando la persona:", options: ["Carece de apoyo social", "Experimenta emociones negativas", "Tiene baja autoestima", "Se fusiona con pensamientos y evita experiencias internas"], correctText: "Se fusiona con pensamientos y evita experiencias internas" },
+            { question: "15. Según el contextualismo funcional, una explicación es válida si:", options: ["Resulta útil para predecir e influir en la conducta", "Es lógicamente coherente", "Describe eventos internos", "Coincide con teorías previas"], correctText: "Resulta útil para predecir e influir en la conducta" }
+        ];
+
+        function App() {
+            const [cur, setCur] = useState(0);
+            const [shuffledOptions, setShuffledOptions] = useState([]);
+            const [sel, setSel] = useState(null);
+            const [res, setRes] = useState(false);
+            const [pts, setPts] = useState(0);
+
+            const q = rawQuestions[cur];
+
+            useEffect(() => {
+                if (cur < rawQuestions.length) {
+                    const options = [...rawQuestions[cur].options];
+                    for (let i = options.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [options[i], options[j]] = [options[j], options[i]];
+                    }
+                    setShuffledOptions(options);
+                }
+            }, [cur]);
+
+            const check = () => {
+                if (shuffledOptions[sel] === q.correctText) setPts(pts + 1);
+                setRes(true);
+            };
+
+            const next = () => { setCur(cur + 1); setSel(null); setRes(false); };
+
+            if (cur >= rawQuestions.length) {
+                return (
+                    <div className="container">
+                        <div className="card" style={{textAlign:'center'}}>
+                            <h1>🎓 ¡Simulacro Terminado!</h1>
+                            <p style={{fontSize: '24px', margin: '20px 0'}}>Puntaje: {pts} / {rawQuestions.length}</p>
+                            <button className="btn-primary" onClick={() => window.location.reload()}>Reintentar Examen</button>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="container">
+                    <div className="header">
+                        <h1>Simulacro de Examen</h1>
+                        <div className="stats">
+                            <div className="stat"><strong>{pts}</strong>Aciertos</div>
+                            <div className="stat"><strong>{rawQuestions.length}</strong>Total</div>
+                        </div>
+                        <div className="progress-bar"><div className="progress-fill" style={{width: `${((cur+1)/rawQuestions.length)*100}%`}}></div></div>
+                    </div>
+                    <div className="card">
+                        <div className="question-number">Pregunta {cur + 1} de {rawQuestions.length}</div>
+                        <div className="question-text">{q.question}</div>
+                        <div className="options">
+                            {shuffledOptions.map((o, i) => {
+                                let cName = "option";
+                                if (sel === i) cName += " selected";
+                                if (res && o === q.correctText) cName += " correct";
+                                if (res && sel === i && o !== q.correctText) cName += " incorrect";
+                                if (res) cName += " disabled";
+                                return <div key={i} className={cName} onClick={() => !res && setSel(i)}>
+                                    <span className="option-label">{String.fromCharCode(97+i)})</span>{o}
+                                </div>
+                            })}
+                        </div>
+                        {res && (
+                            <div className={`feedback ${shuffledOptions[sel] === q.correctText ? 'correct' : 'incorrect'}`}>
+                                {shuffledOptions[sel] === q.correctText ? "✅ ¡Correcto! Muy buena respuesta." : `❌ Incorrecto. La respuesta correcta es: ${q.correctText}`}
+                            </div>
+                        )}
+                        <div className="buttons">
+                            {!res ? <button className="btn-primary" onClick={check} disabled={sel===null}>Verificar</button> 
+                                  : <button className="btn-primary" onClick={next}>Siguiente →</button>}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
